@@ -1,4 +1,3 @@
-import { IUser } from "../interfaces/user.interface"
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
