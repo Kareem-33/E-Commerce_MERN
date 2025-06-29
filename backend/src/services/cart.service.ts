@@ -2,6 +2,8 @@ import { ObjectId } from "mongoose";
 import cartModel from "../models/cart.model";
 import productModel from "../models/product.model";
 import { ICartItem } from "../interfaces/cart.interface";
+import { IOrderItem } from "../interfaces/order.interface";
+import orderModel from "../models/order.model";
 
 interface createNewCartProps{
   userId: ObjectId | string,
@@ -110,7 +112,7 @@ export const deleteItemFromCart = async ({userId, productId}: deleteItemFromCart
 }
 
 export const clearCartItems = async ({userId}: {userId: ObjectId | string}) => {
-    const cart = await getActiveCart({userId});
+  const cart = await getActiveCart({userId});
   if(!cart){
     return {success: false, message: "Cart not found", statusCode: 400};
   }
@@ -118,4 +120,46 @@ export const clearCartItems = async ({userId}: {userId: ObjectId | string}) => {
   cart.items = [];
   const updatedCart = await cart.save();
   return {success: true, message: "Cart cleared successfully", statusCode: 200, cart: updatedCart};
+}
+
+export const checkout = async ({userId, address} : {userId: ObjectId | string, address: string}) => {
+  if(!address){
+    return {success: false, message:"Address not provided", statusCode: 400};
+  }
+  
+  const cart = await getActiveCart({userId});
+  if(!cart){
+    return {success: false, message: "Cart not found", statusCode: 400};
+  }
+  if(cart.items.length === 0){
+    return {success: false, message: "No items found in the cart", statusCode: 400};
+  }
+  const orderItems = [];
+
+  for(const item of cart.items){
+    const product = await productModel.findById( item.productId );
+    if (!product) {
+      return { success: false, message: "Product not found", statusCode: 400 };
+    }
+    const orderItem: IOrderItem = {
+      title: product.title,
+      image: product.image,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+    }
+    orderItems.push(orderItem);
+  }
+
+  const order = new orderModel({
+    items: orderItems,
+    totalAmount: cart.totalAmount,
+    address,
+    userId,
+  })
+  await order.save();
+  
+  cart.status = "completed";
+  cart.save();
+
+  return {success: true, message: "Checkout done successfully", statusCode: 201, order}
 }
