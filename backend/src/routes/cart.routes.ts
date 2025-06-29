@@ -1,22 +1,59 @@
 import express, { Request, Response } from "express";
-import { getActiveCart } from "../services/cart.service";
+import { addItemToCart, getActiveCart, editItemInCart, deleteItemFromCart, clearCartItems } from "../services/cart.service";
 import validateJWT from "../middlewares/validateJWT";
-
-interface ExtendedRequest extends Request{
-  user?: any;
-}
+import ExtendedRequest from "../interfaces/extendedRequest.interface";
 
 const cartRouter = express.Router();
 
-cartRouter.get("/",
-  async(req, res, next) =>{
-  validateJWT(req,res,next);
-  },
+cartRouter.get(
+  "/",
+  validateJWT,
   async (req: ExtendedRequest, res: Response) => {
-  const userId = req.user.id;
-  const cart = await getActiveCart({userId});
-  res.status(200).send(cart);
+    const userId = req.user.id;
+    const cart = await getActiveCart({ userId });
+    res.status(200).send(cart);
   }
-)
+);
+
+cartRouter.post(
+  "/items",
+  validateJWT,
+  async (req: ExtendedRequest, res: Response) => {
+    const userId = req.user.id;
+    const { productId, quantity } = req.body;
+    const response = await addItemToCart({ userId, productId, quantity });
+    res.status(response.statusCode).json(response);
+  }
+);
+
+cartRouter.put(
+  "/items",
+  validateJWT,
+  async(req:ExtendedRequest, res:Response) => {
+    const userId = req.user.id;
+    const {productId, quantity} = req.body;
+    const response = await editItemInCart({userId, productId, quantity});
+    res.status(response.statusCode).json(response);
+  }
+);
+
+cartRouter.delete(
+  "/items",
+  validateJWT,
+  async(req:ExtendedRequest, res:Response) => {
+    const userId = req.user.id;
+    const {productId} = req.body;
+    const response = await deleteItemFromCart({userId, productId});
+    res.status(response.statusCode).json(response);
+  }
+);
+
+cartRouter.delete( "/", validateJWT, async(req:ExtendedRequest, res:Response) => {
+    const userId = req.user.id;
+    const response = await clearCartItems({userId});
+    res.status(response.statusCode).json(response);
+  }
+);
+
 
 export default cartRouter;

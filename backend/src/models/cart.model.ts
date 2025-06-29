@@ -4,7 +4,7 @@ import { ICartItem, ICart } from "../interfaces/cart.interface";
 const cartStatusEnum = ["active", "completed"];
 
 const cartItemSchema = new Schema<ICartItem>({
-  product: {type: Schema.Types.ObjectId, ref:"product", required: true},
+  productId: {type: Schema.Types.ObjectId, ref:"product", required: true},
   quantity: {type: Number, default: 1, required: true},
   unitPrice: {type: Number, required: true},
 })
