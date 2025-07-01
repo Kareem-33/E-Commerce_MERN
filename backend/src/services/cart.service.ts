@@ -148,6 +148,7 @@ export const checkout = async ({userId, address} : {userId: ObjectId | string, a
       quantity: item.quantity,
     }
     orderItems.push(orderItem);
+    product.stock -= item.quantity;
   }
 
   const order = new orderModel({
@@ -157,7 +158,7 @@ export const checkout = async ({userId, address} : {userId: ObjectId | string, a
     userId,
   })
   await order.save();
-  
+
   cart.status = "completed";
   cart.save();
 

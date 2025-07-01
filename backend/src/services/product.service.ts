@@ -1,3 +1,4 @@
+import { ObjectId } from "mongoose";
 import productModel from "../models/product.model";
 
 export const getProducts = async () => {
@@ -60,4 +61,12 @@ export const seedInitialProducts = async () => {
   if(currentProducts.length === 0){
     await productModel.insertMany(products);
   }
+}
+
+export const getProduct = async ({productId}: {productId: ObjectId | string}) => {
+  const product = productModel.findById(productId);
+  if(!product){
+    return {success: false, message:"Product not found", statusCode: 404};
+  }
+  return {success: true, message:"Product found successfully", statusCode: 200, product};
 }
